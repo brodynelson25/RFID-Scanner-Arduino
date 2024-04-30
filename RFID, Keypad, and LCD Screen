@@ -1,0 +1,101 @@
+void LED_check(){
+  digitalWrite(LED_STATUS_YELLOW, HIGH);
+  digitalWrite(LED_ACCESS_RED, HIGH);
+  delay(500);
+  digitalWrite(LED_STATUS_YELLOW, LOW);
+  digitalWrite(LED_ACCESS_RED, LOW);
+  delay(500);
+  digitalWrite(LED_STATUS_GREEN, HIGH);
+  digitalWrite(LED_ACCESS_GREEN, HIGH);
+  delay(500);
+  digitalWrite(LED_STATUS_GREEN, LOW);
+  digitalWrite(LED_ACCESS_GREEN, LOW);
+  delay(500);
+}
+
+void LED_YELLOW_check(){
+   digitalWrite(LED_STATUS_YELLOW, HIGH);
+  delay(1000);
+  digitalWrite(LED_STATUS_YELLOW, LOW);
+  delay(1000);
+}
+
+void init_LCD(){
+  //lcd.init();                      // initialize the lcd 
+  lcd.init();
+  // Print a message to the LCD.
+  lcd.backlight();
+  lcd.print("Starting security");
+  lcd.setCursor(0, 1);
+  lcd.print("system...");
+  delay(1000);
+  lcd.clear();
+}
+
+bool isCardPresent(){
+  bool present = false;
+
+  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return present = true;
+  }
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) 
+  {
+    return present = true;
+  }
+  
+}
+
+
+void read_tag(){
+  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return;
+  }
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) 
+  {
+    return;
+  }
+  //Show UID on serial monitor
+  Serial.print("UID tag :");
+  String content= "";
+  byte letter;
+  for (byte i = 0; i < mfrc522.uid.size; i++) 
+  {
+     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+     Serial.print(mfrc522.uid.uidByte[i], HEX);
+     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  Serial.println();
+  Serial.print("Message : ");
+  content.toUpperCase();
+  if (content.substring(1) == "14 0A D1 2B" || content.substring(1) == "D7 C5 9E 5F") //change here the UID of the card/cards that you want to give access
+  {
+    Serial.println("Authorized access");
+    lcd.print("Authorized access");
+    Serial.println();
+    beep();
+    digitalWrite(LED_STATUS_YELLOW, LOW);
+    digitalWrite(LED_ACCESS_GREEN, HIGH);
+    digitalWrite(LED_STATUS_GREEN, HIGH);
+    delay(500);
+    digitalWrite(LED_ACCESS_GREEN, LOW);
+    digitalWrite(LED_STATUS_GREEN, LOW);
+    digitalWrite(LED_STATUS_YELLOW, HIGH);
+  }
+ 
+ else   {
+    Serial.println(" Access denied");
+    lcd.print(" Access denied");
+    beep();
+    digitalWrite(LED_ACCESS_RED, HIGH);
+    delay(500);
+    digitalWrite(LED_ACCESS_RED, LOW);
+    digitalWrite(LED_STATUS_YELLOW, HIGH);
+  }
+  lcd.clear();
+}
+ 
